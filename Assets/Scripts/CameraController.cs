@@ -12,10 +12,6 @@ public class CameraController : MonoBehaviour
     private float rotX;
     private float rotY;
 
-    public float offsetX = 0.0f;
-    public float offsetY = 10.0f;
-    public float offsetZ = 10.0f;
-
     public Transform realCamera;
     public Vector3 dirNormalized; // 방향
     public Vector3 finalDir; //최종 정해진 방향
