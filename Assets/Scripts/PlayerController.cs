@@ -13,14 +13,14 @@ public class PlayerController : MonoBehaviour
     Camera _camera; //메인 카메라
     CharacterController _controller; // 캐릭터 컨트롤러
 
-    public float speed = 5f; //걷는 속도
-    public float runSpeed = 8f; //뛰는 속도
+    public float speed; //걷는 속도
+    public float runSpeed; //뛰는 속도
     public float finalSpeed; // 최종 결정된 속도
     public float rotateSpeed; // 캐릭터 회전 속도
     public float JumpSpeed=3f; // 캐릭터 점프 속도
     public float Gravity = 9.8f;// 중력 힘
-    public float ySpeed;
-
+    public float ySpeed; // 현재 점프 속도
+    private float previousYSpeed = 0; //추락 시점을 알기 위한 변수
 
     public bool isGround; //땅에 접지 중인지 판단
     public bool isJump; //점프 중인지 판단
@@ -101,7 +101,7 @@ public class PlayerController : MonoBehaviour
         {
             // 지면과 충돌한 경우
             isGround = true;
-            ySpeed= 0f;
+            ySpeed = 0f;
             _animator.SetBool("IsGrounded", true);
             _animator.SetBool("IsJumping", false);
             _animator.SetBool("IsFalling", false);
@@ -114,36 +114,41 @@ public class PlayerController : MonoBehaviour
             _animator.SetBool("IsGrounded", false);
         }
 
-        if (isGround&&Input.GetKey(KeyCode.Space))
+        if (isGround && Input.GetKey(KeyCode.Space))
         {
             // 땅에 있고 점프 버튼이 눌렸을 때만 점프 실행
             ySpeed = JumpSpeed;
             _animator.SetBool("IsJumping", true);
         }
 
-        if(isGround==false && ySpeed <-1)
+        if (isGround == false)
         {
-            //땅이 아니고 떨어지는 속도가 1 초과일때 Falling 애니메이션 적용
-            _animator.SetBool("IsFalling", true);
+            if (ySpeed < previousYSpeed)
+            {
+                // ySpeed가 이전 프레임보다 작아졌을 때 Falling 애니메이션 적용
+                _animator.SetBool("IsFalling", true);
+            }
         }
+        // 이전 프레임의 ySpeed 값을 업데이트
+        previousYSpeed = ySpeed;
 
-       
-        if(_animator.GetCurrentAnimatorStateInfo(0).IsName("Landing"))
-        {
-            //랜딩 에니메이션이 진행중일땐 움직임 제한
+        if (_animator.GetCurrentAnimatorStateInfo(0).IsName("Landing"))
+            {
+                //랜딩 에니메이션이 진행중일땐 움직임 제한
 
-            speed = 0;
-            runSpeed = 0;
+                speed = 0;
+                runSpeed = 0;
+            }
+            else
+            {
+                //랜딩 애니메이션이 진행중이지 않을 땐 이전 속도로
+                speed = 1f;
+                runSpeed = 3;
+            }
+
+            // 점프
+            Vector3 move = new Vector3(0, ySpeed, 0) * Time.deltaTime;
+            _controller.Move(move);
         }
-        else
-        {
-            //랜딩 애니메이션이 진행중이지 않을 땐 이전 속도로
-            speed = 1.5f;
-            runSpeed = 4;
-        }
-
-        // 점프
-        Vector3 move = new Vector3(0, ySpeed, 0) * Time.deltaTime;
-        _controller.Move(move);
-    }
+    
 }

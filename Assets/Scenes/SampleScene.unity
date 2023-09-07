@@ -265,11 +265,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 12443a0e89de6fd45815c1ae86411f67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 1.5
-  runSpeed: 4
+  speed: 2
+  runSpeed: 6
   finalSpeed: 0
   rotateSpeed: 6
-  JumpSpeed: 6
+  JumpSpeed: 9
   Gravity: 9.8
   ySpeed: 0
   isGround: 1
@@ -299,6 +299,23 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 3a74b4afaf1582d45bb2fc7689a3c93b, type: 3}
   m_PrefabInstance: {fileID: 869323442}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &820087176
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 820087169}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3aeda5ccc9852c74eb0a21aae798868f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Damage: 0
+  Combo: 0
+  AttackDelay: 0
+  comboTime: 2
+  time: 0
 --- !u!1001 &869323442
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -364,7 +381,7 @@ PrefabInstance:
       objectReference: {fileID: 9100000, guid: b5ba6c5cf8e8ec8419cb66e5ef027a6b, type: 2}
     - target: {fileID: 5866666021909216657, guid: 3a74b4afaf1582d45bb2fc7689a3c93b, type: 3}
       propertyPath: m_ApplyRootMotion
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3a74b4afaf1582d45bb2fc7689a3c93b, type: 3}
