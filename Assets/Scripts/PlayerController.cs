@@ -13,6 +13,7 @@ public class PlayerController : MonoBehaviour
     Camera _camera; //메인 카메라
     CharacterController _controller; // 캐릭터 컨트롤러
 
+    #region Moving variable
     public float speed; //걷는 속도
     public float runSpeed; //뛰는 속도
     public float finalSpeed; // 최종 결정된 속도
@@ -20,15 +21,26 @@ public class PlayerController : MonoBehaviour
     public float JumpSpeed=3f; // 캐릭터 점프 속도
     public float Gravity = 9.8f;// 중력 힘
     public float ySpeed; // 현재 점프 속도
-    private float previousYSpeed = 0; //추락 시점을 알기 위한 변수
+    private float lastGroundSpeed; // 지상에서의 속도
 
+
+    public bool isMove; //움직이는지 아닌지 판단
     public bool isGround; //땅에 접지 중인지 판단
-    public bool isJump; //점프 중인지 판단
     public bool run; //뛰는지 안뛰는지 판단
+    public bool Moveable;//움직일 수 있는 상황인지 판단
 
     public float smoothness = 10f; //카메라 회전 부드러움
 
     Vector3 moveDir; //이동방향
+    #endregion
+
+    public float Damage;
+    public float AttackDelay = 1.5f;
+    public float AttackSpeed = 1f;
+
+    public int Combo = 0;
+
+    public bool IsAttack;
 
 
     private void Start()
@@ -38,11 +50,72 @@ public class PlayerController : MonoBehaviour
         _controller= this.GetComponent<CharacterController>(); //캐릭터의 캐릭터 컨트롤러 컴포넌트를 변수에 저장
     }
     private void FixedUpdate()
-    {              
-        InputMovement();
-        Jump();
+    {           
+        InputMovement();     
+        
     }
+    private void Update()
+    {
+        Attack();
+        Jump();
+        
+    }
+    void Jump()
+    {
+        Ray ray = new Ray(transform.position, Vector3.down); // 레이를 아랫 방향으로 쏴서 지면과 닿아있는지 판단
+        RaycastHit hit;
+        Debug.DrawRay(transform.position, Vector3.down, Color.red);
+        if (Physics.Raycast(ray, out hit, 0.1f))
+        {
+            // 지면과 충돌한 경우
+            isGround = true;
+            _animator.SetBool("IsGrounded", true);
+            _animator.SetBool("IsJumping", false);
+            _animator.SetBool("IsFalling", false);
+            if (isGround) // 땅에 있는 경우에만 이전 스피드를 저장
+            {
+                lastGroundSpeed = finalSpeed;
+            }
+        }
+        else
+        {
+            // 지면과 충돌하지 않은 경우
+            isGround = false;
+            _animator.SetBool("IsGrounded", false);
+        }
 
+
+        if (Moveable&&isGround && Input.GetKeyDown(KeyCode.Space))
+        {
+            // Moveable이 true이고 땅에 있고 점프 버튼이 눌렸을 때만 점프 실행
+            ySpeed = JumpSpeed;
+            _animator.SetBool("IsJumping", true);
+            Debug.Log("점프");
+            
+        }
+
+        // 중력 적용
+        ySpeed -= Gravity * Time.deltaTime;
+        //ySpeed의 최솟값을 정하여 과도한 중력이 적용되지 않도록함
+        ySpeed = Mathf.Max(ySpeed, -5f);
+
+        // 점프
+        Vector3 move = new Vector3(0, ySpeed * Time.deltaTime, 0);
+        _controller.Move(move);
+        if (!isGround)
+        {
+            if (ySpeed < 9.8)
+            {
+                // ySpeed가 이전 프레임보다 작아졌을 때 Falling 애니메이션 적용
+                _animator.SetBool("IsFalling", true);
+            }
+        }
+        if (_animator.GetCurrentAnimatorStateInfo(0).IsName("Landing"))
+        {
+            //  랜딩 애니메이션이 진행 중이지 않을 때 움직임 제한
+            Moveable = false;
+        }
+    }
     void InputMovement()
     {
         //좌측 시프트 키로 캐릭터가 뛰는지 안뛰는지 판탄
@@ -54,15 +127,19 @@ public class PlayerController : MonoBehaviour
         {
             run = false;
         }
-
-
-        
+      
         finalSpeed = (run) ? runSpeed : speed; //bool 변수인 run이 트루이면 finalSpeed를 runSpeed로 아니라면 그냥 speed로
-        
+
+        //공중에서는 지상에서의 마지막 속도로 고정
+        if(!isGround)
+        {
+            finalSpeed = lastGroundSpeed;
+        }
+
         Vector3 moveInput = new Vector3(Input.GetAxisRaw("Horizontal"),0, Input.GetAxisRaw("Vertical"));
         //Vector3 변수 moveInput에 Horizontal과 Vertical로 새로운 Vector3 를 계속해서 초기화 하여 이동하는 힘 확보 
         
-        bool isMove = moveInput.magnitude != 0; // moveInput의 크기가 0이 아니라면 ismove를 true로 캐릭터가 이동하는 것으로 판단
+        isMove = moveInput.magnitude != 0; // moveInput의 크기가 0이 아니라면 ismove를 true로 캐릭터가 이동하는 것으로 판단
         
         Vector3 lookForward = new Vector3(_camera.transform.forward.x, 0f, _camera.transform.forward.z).normalized;
         //lookForward는 캐릭터의 방향으로 캐릭터의 방향은 카메라의 앞뒤 방향과 같게 함
@@ -77,7 +154,7 @@ public class PlayerController : MonoBehaviour
         float percent = ((run) ? 1f : 0f) * moveInput.magnitude;
         _animator.SetFloat("Blend", percent, 0.1f, Time.deltaTime);
 
-        if (isMove)
+        if (isMove&&Moveable)
         {
             _animator.SetBool("IsMoving", true);
             // 목표 회전 각도 계산
@@ -93,62 +170,51 @@ public class PlayerController : MonoBehaviour
             _animator.SetBool("IsMoving", false);
         }
     }
-    void Jump()
+
+    void Attack()
     {
-        Ray ray = new Ray(transform.position, Vector3.down); //레이를 아랫 방향으로 쏴서 지면과 닿아있는지 판단
-        RaycastHit hit;
-        if (Physics.Raycast(ray, out hit, 0.1f))
+        if(Input.GetMouseButtonDown(0))
         {
-            // 지면과 충돌한 경우
-            isGround = true;
-            ySpeed = 0f;
-            _animator.SetBool("IsGrounded", true);
-            _animator.SetBool("IsJumping", false);
-            _animator.SetBool("IsFalling", false);
+            IsAttack = true;
+            if(IsAttack &&AttackDelay>0)
+            {
+                if(Combo==0)
+                {
+                    _animator.SetBool("IsAttack", true);
+                    Combo = 1;
+                    AttackDelay = 0.5f;
+                }
+                else if(Combo == 1)
+                {
+                    _animator.SetInteger("Combo",1);
+                    Combo = 2;
+                    AttackDelay = 0.5f;
+                }
+                else if(Combo == 2)
+                {
+                    _animator.SetInteger("Combo", 2);
+                    AttackDelay = 0.5f;
+                }
+            }
+        }
+        if (AttackDelay <= 0)
+        {
+            IsAttack = false;
+            _animator.SetBool("IsAttack", false);
+            _animator.SetInteger("Combo", 0);
+            AttackDelay = 0.5f;
+            Combo= 0;
+        }
+
+
+        if (IsAttack)
+        {
+            Moveable = false;
+            AttackDelay -= Time.deltaTime;
         }
         else
         {
-            // 지면과 충돌하지 않은 경우 중력 적용
-            ySpeed -= Gravity * Time.deltaTime;
-            isGround = false;
-            _animator.SetBool("IsGrounded", false);
+            Moveable= true;
         }
-
-        if (isGround && Input.GetKey(KeyCode.Space))
-        {
-            // 땅에 있고 점프 버튼이 눌렸을 때만 점프 실행
-            ySpeed = JumpSpeed;
-            _animator.SetBool("IsJumping", true);
-        }
-
-        if (isGround == false)
-        {
-            if (ySpeed < previousYSpeed)
-            {
-                // ySpeed가 이전 프레임보다 작아졌을 때 Falling 애니메이션 적용
-                _animator.SetBool("IsFalling", true);
-            }
-        }
-        // 이전 프레임의 ySpeed 값을 업데이트
-        previousYSpeed = ySpeed;
-
-        if (_animator.GetCurrentAnimatorStateInfo(0).IsName("Landing"))
-            {
-                //랜딩 에니메이션이 진행중일땐 움직임 제한
-
-                speed = 0;
-                runSpeed = 0;
-            }
-            else
-            {
-                //랜딩 애니메이션이 진행중이지 않을 땐 이전 속도로
-                speed = 1f;
-                runSpeed = 3;
-            }
-
-            // 점프
-            Vector3 move = new Vector3(0, ySpeed, 0) * Time.deltaTime;
-            _controller.Move(move);
-        }
-    
+    } 
 }
