@@ -29,8 +29,6 @@ public class PlayerController : MonoBehaviour
     public bool run; //뛰는지 안뛰는지 판단
     public bool Moveable;//움직일 수 있는 상황인지 판단
 
-    public float smoothness = 10f; //카메라 회전 부드러움
-
     Vector3 moveDir; //이동방향
     #endregion
 
@@ -84,14 +82,12 @@ public class PlayerController : MonoBehaviour
             _animator.SetBool("IsGrounded", false);
         }
 
-
-        if (Moveable&&isGround && Input.GetKeyDown(KeyCode.Space))
+        if (Moveable && isGround && Input.GetKeyDown(KeyCode.Space))
         {
             // Moveable이 true이고 땅에 있고 점프 버튼이 눌렸을 때만 점프 실행
             ySpeed = JumpSpeed;
             _animator.SetBool("IsJumping", true);
             Debug.Log("점프");
-            
         }
 
         // 중력 적용
@@ -118,7 +114,7 @@ public class PlayerController : MonoBehaviour
     }
     void InputMovement()
     {
-        //좌측 시프트 키로 캐릭터가 뛰는지 안뛰는지 판탄
+        //좌측 시프트 키로 캐릭터가 뛰는지 안뛰는지 판단
         if (Input.GetKey(KeyCode.LeftShift))
         {
             run = true;
@@ -137,16 +133,13 @@ public class PlayerController : MonoBehaviour
         }
 
         Vector3 moveInput = new Vector3(Input.GetAxisRaw("Horizontal"),0, Input.GetAxisRaw("Vertical"));
-        //Vector3 변수 moveInput에 Horizontal과 Vertical로 새로운 Vector3 를 계속해서 초기화 하여 이동하는 힘 확보 
+        //수직 수평 이동 방향을 저장
         
         isMove = moveInput.magnitude != 0; // moveInput의 크기가 0이 아니라면 ismove를 true로 캐릭터가 이동하는 것으로 판단
         
         Vector3 lookForward = new Vector3(_camera.transform.forward.x, 0f, _camera.transform.forward.z).normalized;
-        //lookForward는 캐릭터의 방향으로 캐릭터의 방향은 카메라의 앞뒤 방향과 같게 함
-        
+       
         Vector3 lookRight = new Vector3(_camera.transform.right.x, 0f, _camera.transform.right.z).normalized;
-        //lookRight또한 캐릭터의 방향으로 카메라의  좌우방향과 같게 함
-
         
         moveDir = lookForward * moveInput.z + lookRight * moveInput.x;//최종 방향으로 lookForward와 lookRight와 moveInput을 곱하여 이동 방향 결정
 
