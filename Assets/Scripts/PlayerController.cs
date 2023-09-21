@@ -18,9 +18,9 @@ public class PlayerController : MonoBehaviour
     public float runSpeed; //뛰는 속도
     public float finalSpeed; // 최종 결정된 속도
     public float rotateSpeed; // 캐릭터 회전 속도
-    public float JumpSpeed=3f; // 캐릭터 점프 속도
+    public float JumpSpeed=10f; // 캐릭터 점프 속도
     public float Gravity = 9.8f;// 중력 힘
-    public float ySpeed; // 현재 점프 속도
+    public float ySpeed; // 현재 점프 위치
     private float lastGroundSpeed; // 지상에서의 속도
 
 
@@ -60,6 +60,11 @@ public class PlayerController : MonoBehaviour
     }
     void Jump()
     {
+        // 중력 적용
+        ySpeed -= Gravity * Time.deltaTime;
+        //ySpeed의 최솟값을 정하여 과도한 중력이 적용되지 않도록함
+        ySpeed = Mathf.Max(ySpeed, -5f);
+
         Ray ray = new Ray(transform.position, Vector3.down); // 레이를 아랫 방향으로 쏴서 지면과 닿아있는지 판단
         RaycastHit hit;
         Debug.DrawRay(transform.position, Vector3.down, Color.red);
@@ -80,37 +85,34 @@ public class PlayerController : MonoBehaviour
             // 지면과 충돌하지 않은 경우
             isGround = false;
             _animator.SetBool("IsGrounded", false);
-        }
-
-        if (Moveable && isGround && Input.GetKeyDown(KeyCode.Space))
-        {
-            // Moveable이 true이고 땅에 있고 점프 버튼이 눌렸을 때만 점프 실행
-            ySpeed = JumpSpeed;
-            _animator.SetBool("IsJumping", true);
-            Debug.Log("점프");
-        }
-
-        // 중력 적용
-        ySpeed -= Gravity * Time.deltaTime;
-        //ySpeed의 최솟값을 정하여 과도한 중력이 적용되지 않도록함
-        ySpeed = Mathf.Max(ySpeed, -5f);
-
-        // 점프
-        Vector3 move = new Vector3(0, ySpeed * Time.deltaTime, 0);
-        _controller.Move(move);
-        if (!isGround)
-        {
-            if (ySpeed < 9.8)
+            if (!isGround)
             {
-                // ySpeed가 이전 프레임보다 작아졌을 때 Falling 애니메이션 적용
-                _animator.SetBool("IsFalling", true);
+                if (ySpeed < 9.8)
+                {
+                    // ySpeed가 이전 프레임보다 작아졌을 때 Falling 애니메이션 적용
+                    _animator.SetBool("IsFalling", true);
+                }
             }
         }
+
         if (_animator.GetCurrentAnimatorStateInfo(0).IsName("Landing"))
         {
             //  랜딩 애니메이션이 진행 중이지 않을 때 움직임 제한
             Moveable = false;
         }
+        if (Moveable)
+        {
+            if (isGround && Input.GetKeyDown(KeyCode.Space))
+            {
+                // Moveable이 true이고 땅에 있고 점프 버튼이 눌렸을 때만 점프 실행
+                ySpeed = JumpSpeed;
+                _animator.SetBool("IsJumping", true);
+                Debug.Log("점프");
+            }
+        }
+        // 점프
+        Vector3 move = new Vector3(0, ySpeed * Time.deltaTime, 0);
+        _controller.Move(move);
     }
     void InputMovement()
     {
@@ -127,7 +129,7 @@ public class PlayerController : MonoBehaviour
         finalSpeed = (run) ? runSpeed : speed; //bool 변수인 run이 트루이면 finalSpeed를 runSpeed로 아니라면 그냥 speed로
 
         //공중에서는 지상에서의 마지막 속도로 고정
-        if(!isGround)
+        if (!isGround)
         {
             finalSpeed = lastGroundSpeed;
         }

@@ -40,7 +40,7 @@ public class CameraController : MonoBehaviour
 
         //로테이션 최대값 계산
         //Mathf.Clamp(값,최소값,최대값)
-        rotX = Mathf.Clamp(rotX, -clampAngle-20, clampAngle);
+        rotX = Mathf.Clamp(rotX, -clampAngle, clampAngle);
 
         Quaternion rot = Quaternion.Euler(rotX, rotY, 0);
         transform.rotation = rot;
