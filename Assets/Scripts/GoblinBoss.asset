@@ -17,3 +17,5 @@ MonoBehaviour:
   damage: 5
   speed: 1
   sight: 10
+  runspeed: 4
+  type: 1
