@@ -6,6 +6,8 @@ TagManager:
   tags:
   - CinemachineTarget
   - Ground
+  - Monster
+  - Gate
   layers:
   - Default
   - TransparentFX
@@ -13,8 +15,8 @@ TagManager:
   - 
   - Water
   - UI
-  - 
-  - 
+  - Monster
+  - Player
   - 
   - 
   - 
