@@ -8,8 +8,38 @@ public class MonsterMoveAgent : MonoBehaviour
     public List<Transform> wayPoints;
     public int nextIdx;
 
+    private readonly float patrolSpeed = 1.5f;
+    private readonly float traceSpeed = 4.0f;
+
     private NavMeshAgent agent;
-    // Start is called before the first frame update
+    private bool _patrolling;
+
+    public bool patrolling
+    {
+        get { return _patrolling; }
+        set
+        {
+            _patrolling = value;
+            if(_patrolling)
+            {
+                agent.speed= patrolSpeed;
+                MoveWayPoint();
+            }
+        }
+    }
+
+    private Vector3 _traceTarget;
+
+    public Vector3 traceTarget
+    {
+        get { return _traceTarget; }
+        set
+        {
+            _traceTarget = value;
+            agent.speed= traceSpeed;
+            TraceTarget(_traceTarget);
+        }
+    }
     void Start()
     {
         agent= GetComponent<NavMeshAgent>();
@@ -26,6 +56,10 @@ public class MonsterMoveAgent : MonoBehaviour
     }
     private void Update()
     {
+        if(!_patrolling)
+        {
+            return;
+        }
         //NavMeshAgent가 이동하고 있고 목적지에 도착했는지 여부를 게산
         if(agent.velocity.sqrMagnitude>=0.2f*0.2f&&agent.remainingDistance<=0.5f)
         {
@@ -40,11 +74,26 @@ public class MonsterMoveAgent : MonoBehaviour
     private void MoveWayPoint()
     {
         //최단거리 경로계산이 끝나지 않았으면 다음을 수행하지 않음
-        if (agent.isPathStale) return;
+        if (agent.isPathStale)
+        {
+            return;
+        }
 
         //다음 목적지를 wayPoints 배열에서 추출한 위치로 다음 목적지를 지정
         agent.destination = wayPoints[nextIdx].position;
         //네비게이션 기능을 활성화해서 이동을 시작함
         agent.isStopped = false;
+    }
+    void TraceTarget(Vector3 pos)
+    {
+        if (agent.isPathStale) return;
+        agent.destination = pos;
+        agent.isStopped = false;
+    }
+    public void Stop()
+    {
+        agent.isStopped = true;
+        agent.velocity= Vector3.zero;
+        _patrolling = false;
     }
 }

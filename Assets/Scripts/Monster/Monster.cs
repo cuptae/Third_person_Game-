@@ -35,6 +35,7 @@ public class Monster : MonoBehaviour
     public int MinPatrolradius = 3;
 
     public bool isMove;
+    public bool inBattlemode;
     public bool isPatrol;
 
     private State state;
@@ -111,6 +112,7 @@ public class Monster : MonoBehaviour
             }
         }
     }
+
     private void Rotation()
     {
         currentPosition = transform.position;
